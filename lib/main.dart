@@ -30,16 +30,21 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  // Instancia del helper para manejar la base de datos
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  // Controlador para el campo de texto del título del libro
   final TextEditingController _EditTituloLibro = TextEditingController();
+  // Lista para almacenar los libros obtenidos de la base de datos
   List<Libro> _items = [];
 
   @override
   void initState() {
     super.initState();
+    // Cargar la lista de libros al inicializar el widget
     _cargarListaLibros();
   }
 
+  // Método para cargar todos los libros desde la base de datos
   Future<void> _cargarListaLibros() async {
     final items = await _dbHelper.getItems();
     setState(() {
@@ -47,15 +52,18 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  // Método para agregar un nuevo libro a la base de datos
   void _agregarNuevoLibro(String tituloLibro) async {
     final nuevoLibro = Libro(tituloLibro: tituloLibro);
     await _dbHelper.insertLibro(nuevoLibro);
     print("SE AGREGO UN NUEVO LIBRO");
+    // Recargar la lista para mostrar el nuevo libro
     _cargarListaLibros();
-    // Limpieza del campo donde se agrega el libro, luego de agregar uno
+    // Limpiar el campo de texto después de agregar el libro
     _EditTituloLibro.clear();
   }
 
+  // Mostrar diálogo para agregar un nuevo libro
   void _mostrarVentajasAgregar() {
     showDialog(
       context: context,
@@ -69,6 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
           actions: [
             TextButton(
               onPressed: () {
+                // Validar que el campo no esté vacío antes de agregar
                 if (_EditTituloLibro.text.isNotEmpty) {
                   _agregarNuevoLibro(_EditTituloLibro.text.toString());
                   Navigator.of(context).pop();
@@ -82,11 +91,13 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  // Eliminar un libro de la base de datos por su ID
   void _eliminarLibro(int id) async {
     await _dbHelper.eliminar('libros', where: 'id = ?', whereArgs: [id]);
     _cargarListaLibros();
   }
 
+  // Mostrar diálogo de confirmación antes de eliminar un libro
   void _mostrarMensajeModificar(int id) {
     showDialog(
       context: context,
@@ -114,6 +125,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  // Actualizar el título de un libro existente
   void _actualizarLibro(int id, String nuevoTitulo) async {
     await _dbHelper.actualizar(
       'libros',
@@ -124,7 +136,9 @@ class _MyHomePageState extends State<MyHomePage> {
     _cargarListaLibros();
   }
 
+  // Mostrar diálogo para editar el título de un libro
   void _ventanaEditar(int id, String tituloActual) {
+    // Controlador para el campo de texto con el título actual del libro
     TextEditingController _tituloController = TextEditingController(
       text: tituloActual,
     );
@@ -147,6 +161,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
+                // Validar que el campo no esté vacío antes de actualizar
                 if (_tituloController.text.isNotEmpty) {
                   _actualizarLibro(id, _tituloController.text.toString());
                 }
@@ -167,6 +182,7 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text("SqlLite Flutter"),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
       ),
+      // Lista de libros usando ListView.separated para mejor rendimiento
       body: ListView.separated(
         itemCount: _items.length,
         separatorBuilder: (context, index) => Divider(),
@@ -175,18 +191,21 @@ class _MyHomePageState extends State<MyHomePage> {
           return ListTile(
             title: Text(libro.tituloLibro),
             subtitle: Text('ID: ${libro.id}'),
+            // Botón para eliminar el libro
             trailing: IconButton(
               icon: Icon(Icons.delete, color: Colors.grey),
               onPressed: () {
                 _mostrarMensajeModificar(int.parse(libro.id.toString()));
               },
             ),
+            // Al hacer tap en el libro, abrir ventana de edición
             onTap: () {
               _ventanaEditar(int.parse(libro.id.toString()), libro.tituloLibro);
             },
           );
         },
       ),
+      // Botón flotante para agregar nuevos libros
       floatingActionButton: FloatingActionButton(
         onPressed: _mostrarVentajasAgregar,
         child: Icon(Icons.add),
